@@ -175,3 +175,6 @@ ragenv/
 
 # Log
 logs/
+
+# Chatbot_db vectorDB
+chatbot_db/

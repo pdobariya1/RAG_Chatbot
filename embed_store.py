@@ -1,8 +1,13 @@
+import os
 from logger import logging
+from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 
 from data_preprocessing import load_pdf, text_split
+
+load_dotenv()
+HUGGINGFACE_API = os.getenv("HUGGINGFACE_API")
 
 # Extract data from pdf file
 logging.info("Starting PDF data extraction.")
@@ -18,6 +23,10 @@ logging.info(f"Length of text chunks: {len(text_chunks)}")
 
 # Download Embedding Model
 def hugging_face_embedding():
+    from huggingface_hub import login
+    login(token=HUGGINGFACE_API)
+    logging.info("Login successful on Huggingface.")
+    
     logging.info("Initializing HuggingFace embedding model.")
     embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", show_progress=True)
     logging.info("Embedding model initialized successfully.")

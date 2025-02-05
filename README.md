@@ -36,11 +36,12 @@ python app.py
 
 Set up a .env file in root directory with the following:
 ```bash
-GOOGLE_GEMINI_API=your_gemini_api
 MYSQL_HOST=your_host
 MYSQL_USER=your_user
 MYSQL_PASSWORD=your_password
 MYSQL_DATABASE=your_database_name
+GOOGLE_GEMINI_API=your_gemini_api
+HUGGINGFACE_API=your_huggingface_Api
 ```
 
 ## Testing the API

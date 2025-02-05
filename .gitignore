@@ -178,3 +178,5 @@ logs/
 
 # Chatbot_db vectorDB
 chatbot_db/
+
+.vscode

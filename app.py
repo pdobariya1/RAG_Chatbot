@@ -1,70 +1,79 @@
-import socket
-from flask import Flask, request, jsonify
-
+import streamlit as st
 from logger import logging
 from database import get_db_connection, create_database
 from retrieval import qa_chain
 
+# Set up the Streamlit app
+st.set_page_config(page_title="Chat Application", layout="wide")
+st.title("Chat Application")
 
-app = Flask(__name__)
+# Create the database on startup (if needed)
+create_database()
+logging.info("Database created or already exists.")
 
+def process_chat(query):
+    """
+    Process the chat query by invoking the QA chain and storing the conversation in the database.
+    """
+    if not query:
+        st.warning("Please enter a query.")
+        return None
 
-@app.route("/chat", methods=["POST"])
-def chat():
-    data = request.get_json()
-    user_query = data.get("query")
-    if not user_query:
-        logging.warning("Received request without query parameter.")
-        return jsonify({"error": "Query is required"}), 400
-    
-    logging.info(f"Received user query: {user_query}")
-    
-    # Store user query
-    conn = get_db_connection()
-    create_database()
-    logging.info("Database Created.")
-    cursor = conn.cursor()
-    
-    response = qa_chain.invoke({"input": user_query})
-    answer = response["answer"]
+    logging.info(f"Received user query: {query}")
+    response = qa_chain.invoke({"input": query})
+    answer = response.get("answer")
     logging.info(f"Generated response: {answer}")
-    
+
+    # Store chat history in the database
+    conn = get_db_connection()
+    cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO chat_history (role, content) VALUES (%s, %s)", ("user", user_query))
-        cursor.execute("INSERT INTO chat_history (role, content) VALUES (%s, %s)", ("system", answer))
+        cursor.execute(
+            "INSERT INTO chat_history (role, content) VALUES (%s, %s)", 
+            ("user", query)
+        )
+        cursor.execute(
+            "INSERT INTO chat_history (role, content) VALUES (%s, %s)", 
+            ("system", answer)
+        )
         conn.commit()
         logging.info("Chat history updated successfully.")
     except Exception as e:
         logging.error(f"Error inserting chat history: {e}")
     finally:
         conn.close()
-    
-    return jsonify({"answer": answer})
 
+    return answer
 
-@app.route("/history", methods=["GET"])
-def history():
-    logging.info("Fetching chat history.")
+# Chat input form
+with st.form("chat_form", clear_on_submit=True):
+    user_query = st.text_input("Enter your query:")
+    submit_button = st.form_submit_button("Send")
+
+if submit_button and user_query:
+    answer = process_chat(user_query)
+    if answer:
+        st.markdown("### Chat Response")
+        st.write(f"**Query:** {user_query}")
+        st.write(f"**Answer:** {answer}")
+
+# Section to display chat history
+if st.button("Show Chat History"):
     conn = get_db_connection()
+    # Using a cursor that returns dictionaries (adjust based on your DB connector)
     cursor = conn.cursor(dictionary=True)
-    
     try:
         cursor.execute("SELECT * FROM chat_history ORDER BY timestamp DESC LIMIT 20")
         history = cursor.fetchall()
         logging.info("Chat history retrieved successfully.")
+        if history:
+            st.markdown("### Chat History (Most Recent 20 Entries)")
+            for entry in history:
+                st.write(f"**{entry['timestamp']} - {entry['role'].capitalize()}:** {entry['content']}")
+        else:
+            st.info("No chat history available.")
     except Exception as e:
         logging.error(f"Error fetching chat history: {e}")
-        history = []
+        st.error("Error fetching chat history.")
     finally:
         conn.close()
-    
-    return jsonify(history)
-
-
-
-if __name__ == "__main__":
-    host = socket.gethostbyname(socket.gethostname())
-    port = 5000
-    logging.info(f"Flask app starting at: http://{host}:{port}")
-    print(f"Flask app running at: http://{host}:{port}")
-    app.run(port=port, debug=True, use_reloader=False)

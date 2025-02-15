@@ -26,9 +26,9 @@ conda activate ./{env_name}
 pip install -r requirements.txt --use-pep517
 ```
 
-6. **Run the Flask server**
+6. **Run the Streamlit App**
 ```bash
-python app.py
+streamlit run app.py
 ```
 
 

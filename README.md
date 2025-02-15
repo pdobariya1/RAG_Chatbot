@@ -43,21 +43,3 @@ MYSQL_DATABASE=your_database_name
 GOOGLE_GEMINI_API=your_gemini_api
 HUGGINGFACE_API=your_huggingface_Api
 ```
-
-## Testing the API
-1. "/chat" Route Endpoint
-```bash
-import requests
-url = "http://127.0.0.1:5000/chat"
-data = {"query": "What are the treatment methods for managing laminitis in animals?"}
-response = requests.post(url, json=data)
-print(response.json())
-```
-
-2. "/history" Route Endpoint
-```bash
-import requests
-url = "http://127.0.0.1:5000/history"
-response = requests.get(url)
-print(response.json())
-```

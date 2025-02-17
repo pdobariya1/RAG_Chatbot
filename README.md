@@ -43,4 +43,3 @@ MYSQL_DATABASE=your_database_name
 GOOGLE_GEMINI_API=your_gemini_api
 HUGGINGFACE_API=your_huggingface_Api
 ```
-
